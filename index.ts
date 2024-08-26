@@ -67,6 +67,7 @@ export class AwsKmsAccount implements Account {
     const signature = await this.signer.sign(
       Buffer.from(messageHash.slice(2), "hex")
     );
+
     return this.signatureToHex(signature);
   }
 
@@ -76,7 +77,8 @@ export class AwsKmsAccount implements Account {
     const signature = await this.signer.sign(
       Buffer.from(txHash.slice(2), "hex")
     );
-    return this.signatureToHex(signature);
+
+    return signature.toString() as Hex;
   }
 
   public async signTypedData<

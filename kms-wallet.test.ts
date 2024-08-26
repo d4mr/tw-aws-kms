@@ -12,6 +12,9 @@ import {
 } from "viem";
 import { parseTransaction } from "viem";
 import { env } from "./env";
+import { publicKeyToAddress } from "viem/accounts";
+import { recover } from "thirdweb/extensions/farcaster/idRegistry";
+import { serializeTransaction } from "thirdweb";
 
 describe("AwsKmsAccount", () => {
   let awsKmsAccount: AwsKmsAccount;
@@ -95,19 +98,17 @@ describe("AwsKmsAccount", () => {
     };
 
     const signature = await awsKmsAccount.signTransaction(transaction);
-
-    const { r, s, v } = parseTransaction(signature);
-
-    const transactionHash = keccak256(signature);
+    const serializedTx = serializeTransaction({ transaction });
+    const txHash = keccak256(serializedTx);
 
     const recoveredPublicKey = await recoverPublicKey({
-      hash: transactionHash,
-      signature,
+      hash: txHash,
+      signature: `0x${signature}`,
     });
 
+    const recoveredAddress = publicKeyToAddress(recoveredPublicKey);
     const actualAddress = await awsKmsAccount.getAddress();
-    const recoveredAddress = keccak256(recoveredPublicKey).slice(-40);
 
-    expect(`0x${recoveredAddress}`).toBe(actualAddress);
+    expect(recoveredAddress).toBe(actualAddress);
   });
 });
